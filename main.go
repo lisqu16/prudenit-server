@@ -2,14 +2,10 @@ package main
 
 import (
 	"log"
+	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"net/http"
-	"os"
-)
-
-var (
-	Port	string
+	"github.com/lisqu16/prudenit-server-go/config"
 )
 
 // handlers
@@ -24,11 +20,10 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 // config, etc.
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	err := godotenv.Load()
+	err := config.Load()
 	if err != nil {
-		log.Fatal("Failed while loading config")
+		log.Fatal(fmt.Printf("Failed while loading config\n%s", err))
 	}
-	Port = os.Getenv("PORT")
 }
 
 func main() {
@@ -36,5 +31,5 @@ func main() {
 	// routes
 	r.HandleFunc("/user/login", loginUser).Methods("POST")
 	r.HandleFunc("/user/register", registerUser).Methods("POST")
-	log.Fatal(http.ListenAndServe(":"+Port, r))
+	log.Fatal(http.ListenAndServe(":"+config.Port, r))
 }
