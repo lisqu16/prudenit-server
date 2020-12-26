@@ -3,14 +3,19 @@ package main
 import (
 	"log"
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
+	"github.com/gorilla/mux"
 	"github.com/lisqu16/prudenit-server-go/config"
+	rethink "gopkg.in/rethinkdb/rethinkdb-go.v6"
+)
+
+var (
+	s *rethink.Session
 )
 
 // handlers
 func loginUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf8")
+	w.Header().Set("Content-Type", "application/json; charset=utf8")	
 }
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
@@ -20,9 +25,20 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 // config, etc.
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	
 	err := config.Load()
 	if err != nil {
 		log.Fatal(fmt.Printf("Failed while loading config\n%s", err))
+	}
+
+	s, err = rethink.Connect(rethink.ConnectOpts{
+		Address: config.Address,
+		Database: config.Name,
+		Username: config.User,
+		Password: config.Password,
+	})
+	if err != nil {
+		log.Fatal(fmt.Printf("Failed while connecting with database\n%s", err))
 	}
 }
 

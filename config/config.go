@@ -6,7 +6,11 @@ import (
 )
 
 var (
-	Port	string
+	Port		string
+	Address		string
+	Name		string
+	User		string
+	Password	string
 )
 
 func Load() error {
@@ -14,6 +18,12 @@ func Load() error {
 	if err != nil {
 		return err
 	}
+
+	// variables
 	Port = os.Getenv("PORT")
+	Address = os.Getenv("DBADDRESS")
+	Name = os.Getenv("DBNAME")
+	User = os.Getenv("DBUSER")
+	Password = os.Getenv("DBPASS")
 	return nil
 }
