@@ -91,8 +91,8 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	if pass != repass {
 		msgs = append(msgs, "differentPasswords")
 	}
-	if len(pass) <= 7 {
-		msgs = append(msgs, "tooShortPassword")
+	if len(pass) <= 7 || len(pass) > 64 {
+		msgs = append(msgs, "tooShortOrLongPassword")
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf8")
