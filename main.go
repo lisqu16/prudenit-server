@@ -23,6 +23,7 @@ type User struct {
 // handlers
 func loginUser(w http.ResponseWriter, r *http.Request) {
 	var ok bool = true
+	var msg string
 
 	r.ParseForm()
 	email := r.Form.Get("email")
@@ -36,9 +37,11 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 		if err != nil {
 			ok = false
+			msg = "wrongEmailOrPassword"
 		}
 	} else {
 		ok = false
+		msg = "wrongEmailOrPassword"
 	}
 	defer cursor.Close()
 
@@ -50,7 +53,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 			Ok		bool `json:"ok"`
 			Msg		string `json:"message"`
 		}
-		json.NewEncoder(w).Encode(Fail{ok, "wrongEmailOrPassword"})
+		json.NewEncoder(w).Encode(Fail{ok, msg})
 		return
 	}
 
@@ -85,6 +88,8 @@ func init() {
 	if err != nil {
 		log.Fatal(fmt.Printf("Failed while connecting with database\n%s", err))
 	}
+
+	
 }
 
 func main() {
