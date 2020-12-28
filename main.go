@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"fmt"
+	"regexp"
 	"net/http"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -67,7 +68,43 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func registerUser(w http.ResponseWriter, r *http.Request) {
+	var ok bool = true
+	var msgs []string
+
+	r.ParseForm()
+	email := r.Form.Get("email")
+	username := r.Form.Get("username")
+	pass := r.Form.Get("password")
+	repass := r.Form.Get("repassword")
+
+	// regex stolen from another website hehe
+	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	
+	if match := emailRegex.MatchString(email); !match {
+		msgs = append(msgs, "wrongEmail")
+	}
+
+	if len(username) < 2 || len(username) > 24 {
+		msgs = append(msgs, "wrongUsernameLength")
+	}
+
+	if pass != repass {
+		msgs = append(msgs, "differentPasswords")
+	}
+	if len(pass) <= 7 {
+		msgs = append(msgs, "tooShortPassword")
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf8")
+	if len(msgs) > 0 {
+		ok = false
+		type Fail struct {
+			Ok		bool `json:"ok"`
+			Msgs	[]string `json:"messages"`
+		}
+		json.NewEncoder(w).Encode(Fail{ok, msgs})
+		return
+	}
 }
 
 // config, etc.
