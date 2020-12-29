@@ -80,7 +80,8 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	// regex stolen from another website hehe
 	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	
-	if match := emailRegex.MatchString(email); !match {
+	match := emailRegex.MatchString(email)
+	if !match {
 		msgs = append(msgs, "wrongEmail")
 	}
 
@@ -95,9 +96,20 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 		msgs = append(msgs, "tooShortOrLongPassword")
 	}
 
+	if match {
+		cursor, _ := rethink.Table("users").Filter(rethink.Row.Field("email").Eq(email)).Run(s)
+		var res interface{}
+		err := cursor.One(res)
+		if err != rethink.ErrEmptyResult {
+			msgs = append(msgs, "alreadyAssignedEmail")
+		}
+		defer cursor.Close()
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf8")
 	if len(msgs) > 0 {
 		ok = false
+		w.WriteHeader(http.StatusForbidden)
 		type Fail struct {
 			Ok		bool `json:"ok"`
 			Msgs	[]string `json:"messages"`
@@ -105,6 +117,21 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Fail{ok, msgs})
 		return
 	}
+
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password"), 10)
+	var data = make(map[string]string)
+	data["email"] = email
+	data["username"] = username
+	data["password"] = string(hashedPassword)
+	rethink.Table("users").Insert(data).Run(s)
+	
+	w.WriteHeader(http.StatusCreated)
+	type Success struct {
+		Ok		bool `json:"ok"`
+		User	*User `json:"user"`
+	}
+	json.NewEncoder(w).Encode(Success{ok, &User{data["email"], data["username"]}})
+	return
 }
 
 // config, etc.
