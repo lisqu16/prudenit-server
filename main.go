@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/lisqu16/prudenit-server-go/config"
+	"github.com/lisqu16/prudenit-server/config"
 	rethink "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
 

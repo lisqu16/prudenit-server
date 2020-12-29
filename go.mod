@@ -1,4 +1,4 @@
-module github.com/lisqu16/prudenit-server-go
+module github.com/lisqu16/prudenit-server
 
 go 1.15
 
