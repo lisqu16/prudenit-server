@@ -21,10 +21,16 @@ type User struct {
 	Username	string `json:"username"`
 }
 
+type Response struct {
+	Ok		bool `json:"ok"`
+	Msgs 	[]string `json:"messages"`	
+	Data 	map[string]interface{} `json:"data"`
+}
+
 // handlers
 func loginUser(w http.ResponseWriter, r *http.Request) {
 	var ok bool = true
-	var msg string
+	var msgs []string
 
 	r.ParseForm()
 	email := r.Form.Get("email")
@@ -38,11 +44,11 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 		if err != nil {
 			ok = false
-			msg = "wrongEmailOrPassword"
+			msgs = append(msgs, "wrongEmailOrPassword")
 		}
 	} else {
 		ok = false
-		msg = "wrongEmailOrPassword"
+		msgs = append(msgs, "wrongEmailOrPassword")
 	}
 	defer cursor.Close()
 
@@ -50,20 +56,15 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
-		type Fail struct {
-			Ok		bool `json:"ok"`
-			Msg		string `json:"message"`
-		}
-		json.NewEncoder(w).Encode(Fail{ok, msg})
+		json.NewEncoder(w).Encode(Response{ok, msgs, make(map[string]interface{})})
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	type Success struct {
-		Ok		bool `json:"ok"`
-		User	*User `json:"user"`
-	}
-	json.NewEncoder(w).Encode(Success{ok, &User{res["email"], res["username"]}})
+
+	var data = make(map[string]interface{})
+	data["user"] = &User{res["email"], res["username"]}
+	json.NewEncoder(w).Encode(Response{ok, msgs, data})
 	return
 }
 
@@ -110,15 +111,11 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	if len(msgs) > 0 {
 		ok = false
 		w.WriteHeader(http.StatusForbidden)
-		type Fail struct {
-			Ok		bool `json:"ok"`
-			Msgs	[]string `json:"messages"`
-		}
-		json.NewEncoder(w).Encode(Fail{ok, msgs})
+		json.NewEncoder(w).Encode(Response{ok, msgs, make(map[string]interface{})})
 		return
 	}
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password"), 10)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
 	var data = make(map[string]string)
 	data["email"] = email
 	data["username"] = username
@@ -126,11 +123,10 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	rethink.Table("users").Insert(data).Run(s)
 	
 	w.WriteHeader(http.StatusCreated)
-	type Success struct {
-		Ok		bool `json:"ok"`
-		User	*User `json:"user"`
-	}
-	json.NewEncoder(w).Encode(Success{ok, &User{data["email"], data["username"]}})
+
+	var rdata = make(map[string]interface{})
+	rdata["user"] = &User{data["email"], data["username"]}
+	json.NewEncoder(w).Encode(Response{ok, msgs, rdata})
 	return
 }
 
