@@ -141,10 +141,19 @@ func init() {
 
 	s, err = rethink.Connect(rethink.ConnectOpts{
 		Address: config.Address,
-		Database: config.Name,
 		Username: config.User,
 		Password: config.Password,
 	})
+
+	var exists bool
+	cursor, _ := rethink.DBList().Contains(config.Name).Run(s)
+	cursor.One(&exists)
+	if !exists {
+		rethink.DBCreate(config.Name).Run(s)
+		log.Println(fmt.Printf("Created database \"%s\"", config.Name))
+	}
+
+	s.Use(config.Name)
 	if err != nil {
 		log.Fatal(fmt.Printf("Failed while connecting with database\n%s", err))
 	}
