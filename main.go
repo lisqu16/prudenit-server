@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"fmt"
 	"regexp"
 	"net/http"
 	"encoding/json"
@@ -136,7 +135,7 @@ func init() {
 	
 	err := config.Load()
 	if err != nil {
-		log.Fatal(fmt.Printf("Failed while loading config\n%s", err))
+		log.Fatalf("Failed while loading config\n%s", err)
 	}
 
 	s, err = rethink.Connect(rethink.ConnectOpts{
@@ -145,20 +144,18 @@ func init() {
 		Password: config.Password,
 	})
 
+	if err != nil {
+		log.Fatalf("Failed while connecting with database\n%s", err)
+	}
+
 	var exists bool
 	cursor, _ := rethink.DBList().Contains(config.Name).Run(s)
 	cursor.One(&exists)
 	if !exists {
 		rethink.DBCreate(config.Name).Run(s)
-		log.Println(fmt.Printf("Created database \"%s\"", config.Name))
+		log.Printf("Created database \"%s\"", config.Name)
 	}
-
 	s.Use(config.Name)
-	if err != nil {
-		log.Fatal(fmt.Printf("Failed while connecting with database\n%s", err))
-	}
-
-	
 }
 
 func main() {
