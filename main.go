@@ -156,6 +156,13 @@ func init() {
 		log.Printf("Created database \"%s\"", config.Name)
 	}
 	s.Use(config.Name)
+
+	var tableExist bool
+	cursor, _= rethink.TableList().Contains("users").Run(s)
+	cursor.One(&tableExist)
+	if !tableExist {
+		rethink.TableCreate("users").Run(s)
+	}
 }
 
 func main() {
