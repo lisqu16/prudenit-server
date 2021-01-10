@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lisqu16/prudenit-server/config"
 )
