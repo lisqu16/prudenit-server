@@ -11,6 +11,7 @@ var (
 	Name		string
 	User		string
 	Password	string
+	TokenSecret	string
 )
 
 func Load() error {
@@ -25,5 +26,6 @@ func Load() error {
 	Name = os.Getenv("DBNAME")
 	User = os.Getenv("DBUSER")
 	Password = os.Getenv("DBPASS")
+	TokenSecret = os.Getenv("SECRET")
 	return nil
 }

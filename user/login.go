@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/dgrijalva/jwt-go"
 	db "github.com/lisqu16/prudenit-server/database"
 	rethink "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
@@ -40,10 +41,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK) 
 
 	var data = make(map[string]interface{})
-	data["user"] = &User{res["email"], res["username"]}
+
+	token := SignToken(&jwt.MapClaims{
+		"user": &User{res["email"], res["username"]},
+	})
+	data["token"] = token
+
 	json.NewEncoder(w).Encode(Response{ok, msgs, data})
 	return
 }
