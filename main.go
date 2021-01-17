@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lisqu16/prudenit-server/user"
 	"github.com/lisqu16/prudenit-server/config"
+	"github.com/lisqu16/prudenit-server/gateway"
 	db "github.com/lisqu16/prudenit-server/database"
 )
 
@@ -26,8 +27,11 @@ func init() {
 
 func main() {
 	r := mux.NewRouter()
+
 	// routes
 	r.HandleFunc("/user/login", user.Login).Methods("POST")
 	r.HandleFunc("/user/register", user.Register).Methods("POST")
+	r.HandleFunc("/gateway", gateway.Gateway).Methods("GET")
+
 	log.Fatal(http.ListenAndServe(":"+config.Port, r))
 }
